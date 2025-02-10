@@ -3,13 +3,25 @@ const { DateUtil } = require('../../helpers');
 
 const userSchema = mongoose.Schema(
   {
+    firstName: {
+      type: String,
+      required: true,
+    },
+    lastName: {
+      type: String,
+    },
     email: {
       type: String,
       required: true,
     },
     password: {
       type: String,
-      required: true,
+    },
+    isActive: {
+      type: Boolean,
+    },
+    isEmailVerified: {
+      type: Boolean,
     },
     createdAt: {
       type: Date,

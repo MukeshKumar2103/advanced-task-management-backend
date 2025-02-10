@@ -5,7 +5,6 @@ const { DateUtil } = require('../../helpers');
 const { getCurrentUTC } = DateUtil;
 
 const createApiRoute = async (req, session = null) => {
-  console.log('session', session);
   try {
     const newRoute = {
       dns: req.body.dns,
@@ -15,6 +14,7 @@ const createApiRoute = async (req, session = null) => {
       isPublic: req.body.isPublic,
       isActive: req.body.isActive,
       service: req.body.service,
+      version: req.body.version,
     };
 
     const result = await APIBusMasterModel.create([newRoute]);

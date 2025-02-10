@@ -1,7 +1,7 @@
 const userSessionModel = require('../models/user_session.modal');
 const { DateUtil } = require('../../helpers');
 
-const createuserSession = async (data) => {
+const createUserSession = async (data) => {
   const createdSession = await userSessionModel.create(data);
   return createdSession;
 };
@@ -42,7 +42,7 @@ const getSessionAndUpdateAll = async (id) => {
 };
 
 module.exports = {
-  createuserSession,
+  createUserSession,
   getSessionAndUpdateAll,
   getSession,
 };

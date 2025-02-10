@@ -31,13 +31,13 @@ const getCurrentUTC = (date = null, format = null) => {
 
   if (format) return formatDate(currentDate, format);
 
-  return currentDate.toUTCString();
+  return currentDate.toISOString();
 };
 
 const generateExpiryTimeUTC = (minutes = 1, format = null) => {
   const currentDate = new Date();
   currentDate.setUTCMinutes(currentDate.getUTCMinutes() + minutes);
-  const utcString = currentDate.toUTCString();
+  const utcString = currentDate.toISOString();
 
   if (format) return formatDate(utcString, format);
 

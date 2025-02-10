@@ -92,4 +92,4 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use('/api-gateway', RoutesV1);
+app.use('/auth-service', RoutesV1);

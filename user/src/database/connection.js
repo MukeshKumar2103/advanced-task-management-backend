@@ -9,10 +9,10 @@ const connectDB = () => {
   mongoose
     .connect(Env.connectionString)
     .then(() => {
-      console.log('API Bus Mongo Connected!');
+      console.log('User Service Mongo Connected!');
     })
     .catch(() => {
-      console.log('Connection to API Bus Mongo Failed!');
+      console.log('Connection to User Service Mongo Failed!');
     });
 };
 

@@ -12,7 +12,7 @@ const getActualRoute = async (req, res, next) => {
     message: 'Inside get actual url',
   });
 
-  const path = req.path;
+  const path = `/api/v1${req.path}`;
   const method = req.method?.toLowerCase();
   const params = req.params;
 
@@ -41,6 +41,7 @@ const getActualRoute = async (req, res, next) => {
       traceId: traceId,
       message: 'API route found in DB',
     });
+
     const getApi = await APIBusMasterModel.findOne({
       path: path,
       isActive: true,

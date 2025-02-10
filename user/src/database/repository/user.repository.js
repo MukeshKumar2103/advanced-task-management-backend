@@ -1,33 +1,51 @@
+const { default: mongoose } = require('mongoose');
 const userModel = require('../models/user.model');
 
-const getResource = async (data, session = null) => {
-  const { id, phoneNumber, isActive } = data;
-
-  const payload = {};
-
-  if (id) payload['_id'] = Number(id);
-  if (phoneNumber) payload['phoneNumber'] = phoneNumber;
-  if (isActive) payload['isActive'] = isActive;
-
-  const user = await userModel.find(payload).session(session);
-  return user;
-};
-
-const checkResourceExist = async (id, session = null) => {
+const checkUserExist = async (email, session = null) => {
   try {
-    const res = await userModel
-      .find({
-        _id: Number(id),
-      })
-      .session(session);
+    const res = await userModel.find({ email: email }).session(session);
     return res;
   } catch (err) {
-    console.error('Error checking resource existence:', err);
+    console.error('Error checking user existence:', err);
     throw err;
   }
 };
 
-module.exports = {
-  getResource,
-  checkResourceExist,
+const checkIsUserExist = async (id, session = null) => {
+  try {
+    const res = await userModel.find({ _id: id }).session(session);
+    return res;
+  } catch (err) {
+    console.error('Error checking user existence:', err);
+    throw err;
+  }
 };
+
+const createUser = async (data, session = null) => {
+  console.log('data', data);
+  try {
+    const result = await userModel.create([data], session);
+    return result;
+  } catch (error) {
+    console.error('Error creating API route:', error.message);
+    throw new Error(`Failed to create API route: ${error.message}`);
+  }
+};
+
+const updateUser = async (data, session = null) => {
+  const { id, ...user } = data;
+  try {
+    const result = await userModel.findOneAndUpdate(
+      { _id: id, isActive: true },
+      { ...user },
+      { new: true, session }
+    );
+
+    return result;
+  } catch (error) {
+    console.error('Error updating user:', error.message);
+    throw new Error(`Failed to update user: ${error.message}`);
+  }
+};
+
+module.exports = { checkUserExist, checkIsUserExist, createUser, updateUser };

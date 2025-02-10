@@ -5,10 +5,11 @@ const config = require('./config');
 const routes = require('./routes');
 const { databaseConnection } = require('./database');
 const { createRoute, getRoute } = require('./services/api_master');
-const { DateUtil } = require('./helpers');
+const { DateUtil, Common } = require('./helpers');
 
 const { RoutesV1 } = routes;
 const { getCurrentUTC, getLocalTimeFromUTC } = DateUtil;
+const { generateUUID } = Common;
 
 const { Env, Logger } = config;
 
@@ -18,6 +19,12 @@ databaseConnection();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+app.use((req, res, next) => {
+  const traceId = generateUUID();
+  req.traceId = traceId;
+  next();
+});
 
 // Logger middleware
 morgan.token('ip', (req) => req.headers['x-forwarded-for'] || req.ip);

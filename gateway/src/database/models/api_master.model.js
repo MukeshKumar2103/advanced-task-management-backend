@@ -30,6 +30,9 @@ const ApiMasterSchema = new Schema(
     service: {
       type: String,
     },
+    version: {
+      type: Number,
+    },
     isActive: {
       type: Boolean,
       default: true,

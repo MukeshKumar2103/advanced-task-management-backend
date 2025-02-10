@@ -12,11 +12,11 @@ const { generateUUID } = Common;
 
 // Function to generate access token
 const generateAccessToken = async (payload) => {
-  const { traceId, id, phoneNumber, secret } = payload;
+  const { traceId, id, email, secret } = payload;
 
   try {
     const accessToken = {
-      phoneNumber,
+      email,
       secret,
     };
 
@@ -28,7 +28,7 @@ const generateAccessToken = async (payload) => {
       traceId,
       message: 'Before encrypt the data for JWT token',
       data: CircularJSON.stringify({
-        resourceId: id,
+        userId: id,
         accessToken,
         publicKey,
         privateKey,
@@ -38,7 +38,6 @@ const generateAccessToken = async (payload) => {
     const encryptedData = encryptObject(
       {
         userId: id,
-        phoneNumber,
         accessToken: JSON.stringify(accessToken),
       },
       secret
@@ -81,8 +80,8 @@ const generateJWTToken = (user, secret) => {
 // Function to hash password
 const hashPassword = async (password) => {
   const salt = await bcrypt.genSalt(10);
-  const hashPassword = await bcrypt.hash(password, salt);
-  return hashPassword;
+  const hashedPassword = await bcrypt.hash(password, salt);
+  return hashedPassword;
 };
 
 // Function to compare passwords
@@ -94,18 +93,42 @@ const comparePassword = async (password1, password2) => {
 function encryptObject(obj, key) {
   const jsonString = JSON.stringify(obj);
   const iv = crypto.randomBytes(16); // 16 bytes for AES block size
-  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
+  const cipher = crypto.createCipheriv(
+    'aes-256-cbc',
+    Buffer.from(key, 'base64'),
+    iv
+  );
   let encrypted = cipher.update(jsonString, 'utf8', 'base64');
   encrypted += cipher.final('base64');
   const encryptedData = `${iv.toString('base64')}:${encrypted}`;
 
   return encryptedData;
 }
-
 // Function to decrypt an object
-const decryptObject = async (token, secret) => {
+function decryptObject(encryptedData, key) {
+  const [ivBase64, encryptedContent] = encryptedData.split(':');
+
+  if (!ivBase64 || !encryptedContent) {
+    throw new Error('Invalid encrypted data format');
+  }
+
+  const iv = Buffer.from(ivBase64, 'base64');
+  const decipher = crypto.createDecipheriv(
+    'aes-256-cbc',
+    Buffer.from(key, 'base64'),
+    iv
+  );
+
+  let decrypted = decipher.update(encryptedContent, 'base64', 'utf8');
+  decrypted += decipher.final('utf8');
+
+  return JSON.parse(decrypted);
+}
+
+// Function to decrypt an jwt token
+const decryptJwtObject = (token, secret) => {
   try {
-    const encryptedData = await jwt.verify(token, secret);
+    const encryptedData = jwt.verify(token, secret);
 
     const [ivBase64, encryptedContent] =
       encryptedData?.accessToken.split(':') || [];
@@ -138,4 +161,5 @@ module.exports = {
   comparePassword,
   encryptObject,
   decryptObject,
+  decryptJwtObject,
 };

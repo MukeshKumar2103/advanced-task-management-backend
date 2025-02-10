@@ -2,14 +2,14 @@ const axios = require('axios');
 const CircularJSON = require('circular-json');
 
 const { logDetails } = require('../helpers/logDetails');
-const logger = require('../config/logger');
 
 const makeBackendAPICall = async (req, res) => {
   const traceId = req.traceId;
   const api = req.original_api;
 
+  console.log('traceId', traceId);
+
   try {
-    logger.warn(CircularJSON.stringify(req?.headers));
     await logDetails({ traceId, message: 'Inside the make backend api call' });
 
     const dns = api?.dns?.endsWith('/') ? api.dns : `${api?.dns}/`;

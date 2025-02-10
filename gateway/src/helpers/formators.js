@@ -4,83 +4,81 @@ const Redis = require('./redis');
 
 const { logDetails } = Logs;
 const { getHashDataFromCache } = Redis;
-const { decryptObject } = JwtHelpers;
+const { decryptJwtObject } = JwtHelpers;
 
-// Format the request for logging
-const formatRequestForLog = async (req, res, next) => {
-  const { headers, path, query, body } = req;
-  const traceId = Array.isArray(headers['x-trace-id'])
-    ? headers['x-trace-id'][0]
-    : headers['x-trace-id'] || '-';
-  const ip = headers['x-forwarded-for'] || req.ip || '-';
-  const userAgent = headers['user-agent'];
-  const authToken = headers['authorization'] || '';
+const formatRequest = (isPublic) => {
+  return async (req, res, next) => {
+    const traceId = req.headers['x-trace-id'] || '-';
+    const ip = req.headers['x-forwarded-for'] || req.ip;
+    const userAgent = req.headers['user-agent'];
+    const authToken = req.headers['authorization'] || '';
+    const token = authToken?.split('Bearer ')?.[1];
 
-  await logDetails({
-    traceId,
-    message: 'Before split',
-    data: JSON.stringify({ authToken }),
-  });
+    let obj = {};
 
-  const token = authToken.split('Bearer ')[1];
+    await logDetails({
+      traceId: traceId,
+      message: 'Inside theformat request',
+    });
 
-  await logDetails({
-    traceId,
-    message: 'After split',
-    data: JSON.stringify({ token }),
-  });
+    // if (token && !isPublic) {
+    //   const tokenExist = await getHashDataFromCache(token);
 
-  const tokenExist = await getHashDataFromCache(token);
+    //   if (!tokenExist || isEmptyObject(tokenExist)) {
+    //     return res.status(403).json(
+    //       formatResponse({
+    //         action: 'Verify token.',
+    //         code: 0,
+    //         data: [{ message: 'Forbidden' }],
+    //       })
+    //     );
+    //   }
 
-  if (!tokenExist || isEmptyObject(tokenExist)) {
-    return res.status(403).json(
-      formatResponse({
-        action: 'Verify token.',
-        code: 0,
-        data: [{ message: 'Token verification failed.' }],
-      })
-    );
-  }
+    //   await logDetails({
+    //     traceId: traceId,
+    //     message: 'tokenExist',
+    //     data: JSON.stringify({ tokenExist }),
+    //   });
 
-  await logDetails({
-    traceId,
-    message: 'tokenExist',
-    data: JSON.stringify({ tokenExist }),
-  });
+    //   const parsedToken = await decryptJwtObject(
+    //     token,
+    //     tokenExist?.resource_secret
+    //   );
 
-  const parsedToken = await decryptObject(token, tokenExist?.resource_secret);
+    //   if (!parsedToken || isEmptyObject(parsedToken)) {
+    //     return res.status(403).json(
+    //       formatResponse({
+    //         action: 'Verify token.',
+    //         code: 0,
+    //         data: [{ message: 'Forbidden' }],
+    //       })
+    //     );
+    //   }
 
-  if (!parsedToken || isEmptyObject(parsedToken)) {
-    return res.status(403).json(
-      formatResponse({
-        action: 'Verify token.',
-        code: 0,
-        data: [{ message: 'Token verification failed.' }],
-      })
-    );
-  }
+    //   await logDetails({
+    //     traceId: traceId,
+    //     message: 'parsedToken',
+    //     data: JSON.stringify({ parsedToken }),
+    //   });
 
-  await logDetails({
-    traceId,
-    message: 'parsedToken',
-    data: JSON.stringify({ parsedToken }),
-  });
+    //   obj['data'] = parsedToken;
+    //   obj['token'] = token;
+    // }
 
-  const logObject = {
-    traceId,
-    url: path || '',
-    query: query || {},
-    body: body || {},
-    ip: ip || '',
-    userAgent: userAgent || '',
-    data: parsedToken,
+    const logObject = {
+      traceId: traceId,
+      url: req?.path,
+      query: req?.query || {},
+      body: req?.body || {},
+      ip: ip,
+      userAgent: userAgent,
+      ...obj,
+    };
+    req['formatedData'] = logObject;
+    next();
   };
-
-  req.formatedData = logObject;
-  next();
 };
 
-// Format the response
 const formatResponse = ({
   action = '',
   code = 0,
@@ -98,14 +96,12 @@ const formatResponse = ({
   };
 };
 
-// Check if an object is empty
 const isEmptyObject = (obj) => {
   return Object.keys(obj).length === 0;
 };
 
-// Export the functions using module.exports
 module.exports = {
-  formatRequestForLog,
+  formatRequest,
   formatResponse,
   isEmptyObject,
 };

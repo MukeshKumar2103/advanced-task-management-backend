@@ -76,13 +76,13 @@ app.use(
 );
 
 app.listen(Env.port, () => {
-  console.log(`Auth Service is Listening to Port ${Env.port}`);
+  console.log(`User Service is Listening to Port ${Env.port}`);
 });
 
 app.get('/', (req, res) => {
   res.send({
     status: 'OK',
-    service: 'Auth Service',
+    service: 'User Service',
     'utc timestamp': getCurrentUTC(),
     'local timestamp': getLocalTimeFromUTC(
       getCurrentUTC(),
@@ -92,4 +92,11 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use('/api-gateway', RoutesV1);
+app.use(
+  '/user-service',
+  (req, res, next) => {
+    console.log('req--------->', req?.traceId, req?.query);
+    next();
+  },
+  RoutesV1
+);

@@ -45,10 +45,10 @@ const verifyToken = async (req, res, next) => {
         data: JSON.stringify(api),
       });
 
-      if (api?.service === 'resource-services') {
+      if (api?.service === 'user-services') {
         try {
           const res = await axios.post(
-            'http://localhost:8001/api/v1/resource/token/verify',
+            'http://localhost:8001/user-service/api/v1/auth/user/token/verify',
             {},
             {
               headers: {

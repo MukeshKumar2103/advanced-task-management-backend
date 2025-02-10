@@ -3,27 +3,31 @@ const { DateUtil } = require('../../helpers');
 
 const userSessionSchema = mongoose.Schema(
   {
-    user_id: {
+    userId: {
       type: String,
       required: true,
     },
-    public_key: {
+    secret: {
       type: String,
       required: true,
     },
-    private_key: {
+    // public_key: {
+    //   type: String,
+    //   required: true,
+    // },
+    // private_key: {
+    //   type: String,
+    //   required: true,
+    // },
+    authToken: {
       type: String,
       required: true,
     },
-    auth_token: {
+    startTime: {
       type: String,
       required: true,
     },
-    start_time: {
-      type: String,
-      required: true,
-    },
-    expiration_time: {
+    expirationTime: {
       type: String,
       required: true,
     },
