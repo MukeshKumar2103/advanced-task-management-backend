@@ -65,7 +65,10 @@ const signUp = async (req, res) => {
     //   session,
     // });
 
-    const isUserExist = userRepository.checkUserExist(payload?.email, session);
+    const isUserExist = await userRepository.checkUserExist(
+      payload?.email,
+      session
+    );
 
     // check user is exist
     if (isUserExist?.length > 0) {
@@ -89,7 +92,7 @@ const signUp = async (req, res) => {
     //   },
     // });
 
-    const isUserCreated = userRepository.createUser(payload, session);
+    const isUserCreated = await userRepository.createUser(payload, session);
 
     const user = isUserCreated?.[0];
 
@@ -107,6 +110,8 @@ const signUp = async (req, res) => {
     };
 
     const verificationToken = encryptObject(encryptionObject, secret);
+
+    console.log('user------>', isUserCreated, user);
 
     const verificationSessionData = {
       userId: user?._id,
@@ -204,7 +209,7 @@ const verifyEmail = async (req, res) => {
   await logDetails({
     traceId: traceId,
     message: 'Inside verify email',
-    data: JSON.stringify({ token, logs: logObject, body: req.body }),
+    data: JSON.stringify({ token, logs: logObject }),
   });
 
   try {
@@ -212,11 +217,18 @@ const verifyEmail = async (req, res) => {
 
     const tokenValues = decryptObject(token, emailVerificationSecret);
 
+    console.log('tokenValues------------>', tokenValues);
+
     const isTokenExist =
       await verificationSessionRepository.getVerificationSession(
-        tokenValues?.id,
-        { code: token }
+        {
+          id: tokenValues?.id,
+          code: token,
+          isActive: true,
+        },
+        session
       );
+    console.log('isTokenExist------------>', isTokenExist);
 
     if (isTokenExist?.length === 0) throw new Error('Invalid token');
 
@@ -244,18 +256,10 @@ const verifyEmail = async (req, res) => {
 
     if (!isTokenExpired) throw new Error('Token expired');
 
-    const isUserExist = userRepository.checkUserExist(
+    const isUserExist = await userRepository.checkUserExist(
       tokenValues?.email,
       session
     );
-
-    // const isUserExist = await userAppEvents({
-    //   payload: {
-    //     event: 'CHECK_USER_EXIST',
-    //     data: { email: tokenValues?.email },
-    //   },
-    //   session,
-    // });
 
     if (isUserExist?.result?.length === 0) {
       await logDetails({
@@ -265,7 +269,7 @@ const verifyEmail = async (req, res) => {
       throw new Error('User not found');
     }
 
-    const user = isUserExist?.result?.[0];
+    const user = isUserExist?.[0];
 
     await logDetails({
       traceId: traceId,
@@ -282,54 +286,12 @@ const verifyEmail = async (req, res) => {
         session
       );
 
-    // const isUserEmailVerificationStatusUpdated = await userAppEvents({
-    //   payload: {
-    //     event: 'UPDATE_USER',
-    //     data: {
-    //       user: { id: user?._id, updatedData: { isEmailVerified: true } },
-    //     },
-    //   },
-    //   session,
-    // });
-
-    // const secret = generateAesKey();
-
-    // const sessionData = {
-    //   user_id: user?._id,
-    //   public_key: '',
-    //   private_key: '',
-    //   auth_token: '',
-    //   expiration_time: generateExpiryTimeUTC(Env.session.exiprationTime),
-    //   start_time: generateExpiryTimeUTC(0),
-    //   status: 'active',
-    //   isActive: true,
-    //   secret: secret,
-    // };
-
-    // const sessionCreated = await createUserSession(sessionData, session);
-
-    // await logDetails({
-    //   traceId: traceId,
-    //   message: 'After created the session',
-    //   data: JSON.stringify(sessionCreated),
-    // });
-
-    // auth token
-    // const accessToken = await generateAccessToken({
-    //   id: user?._id,
-    //   traceId,
-    //   email: '',
-    //   secret,
-    // });
-
-    // await setHashDataToCache(user?._id, 'token', accessToken);
-    // await setHashDataToCache(user?._id, 'user', user);
-
     await logDetails({
       traceId: traceId,
       message: 'After verified token',
       data: JSON.stringify({
         token: token,
+        tokenValues,
       }),
     });
 
@@ -399,7 +361,7 @@ const signIn = async (req, res) => {
       message: 'User exist',
     });
 
-    const user = isUserExist?.result?.[0];
+    const user = isUserExist?.[0];
 
     const isPasswordValid = await comparePassword(password, user?.password);
 
@@ -541,7 +503,7 @@ const signUpContent = ({ data }) => {
   const link = `${baseUrl}?token=${data?.token}`;
 
   return `<div>
-                Hello ${data?.first_name} ${data?.last_name || ''}
+                Hello ${data?.firstName} ${data?.lastName || ''}
                 <br/>
                 Are you ready to gain access to all of the assets we prepared for clients of [company]?
                 <br/>

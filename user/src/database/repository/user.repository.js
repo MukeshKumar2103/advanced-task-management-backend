@@ -1,4 +1,3 @@
-const { default: mongoose } = require('mongoose');
 const userModel = require('../models/user.model');
 
 const checkUserExist = async (email, session = null) => {

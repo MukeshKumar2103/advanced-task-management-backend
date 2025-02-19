@@ -92,11 +92,4 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use(
-  '/user-service',
-  (req, res, next) => {
-    console.log('req--------->', req?.traceId, req?.query);
-    next();
-  },
-  RoutesV1
-);
+app.use('/user-service', RoutesV1);

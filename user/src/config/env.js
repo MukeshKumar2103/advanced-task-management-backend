@@ -20,6 +20,13 @@ const envVarsSchema = Joi.object()
     REDIS_HOST: Joi.string().required(),
     REDIS_PORT: Joi.number().default(6379),
     REDIS_DB: Joi.number().default(0),
+
+    SESSION_EXPIRATION_TIME: Joi.number().required(),
+    VERIFICATION_SESSION_EXPIRATION_TIME: Joi.number().required(),
+    EMAIL_VERIFICATION_KEY: Joi.string().required(),
+
+    // services url
+    NOTIFICATION_SERVICE: Joi.string().required(),
   })
   .unknown();
 
@@ -41,6 +48,19 @@ function createConfig() {
       host: envVars.REDIS_HOST,
       port: envVars.REDIS_PORT,
       db: envVars.REDIS_DB,
+    },
+
+    session: {
+      exiprationTime: envVars?.SESSION_EXPIRATION_TIME,
+    },
+
+    email: {
+      verificationKey: envVars?.EMAIL_VERIFICATION_KEY,
+      verificationExiprationTime: envVars?.VERIFICATION_SESSION_EXPIRATION_TIME,
+    },
+
+    appEvents: {
+      notificationService: envVars?.NOTIFICATION_SERVICE,
     },
   };
 }

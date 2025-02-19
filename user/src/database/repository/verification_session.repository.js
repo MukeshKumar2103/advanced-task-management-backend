@@ -8,12 +8,13 @@ const createVerificationSession = async ({ data, session }) => {
   return createdSession;
 };
 
-const getVerificationSession = async (id, query) => {
-  const session = await verificationSessionModel.find({
+const getVerificationSession = async (payload, session = null) => {
+  const { id, ...data } = payload;
+  const verifivationSession = await verificationSessionModel.find({
     userId: id,
-    ...query,
-  });
-  return session;
+    ...data,
+  }).session(session);
+  return verifivationSession;
 };
 
 const updateVerificationSession = async (id) => {

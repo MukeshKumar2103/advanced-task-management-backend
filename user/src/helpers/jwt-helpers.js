@@ -95,7 +95,7 @@ function encryptObject(obj, key) {
   const iv = crypto.randomBytes(16); // 16 bytes for AES block size
   const cipher = crypto.createCipheriv(
     'aes-256-cbc',
-    Buffer.from(key, 'base64'),
+    crypto.createHash('sha256').update(key).digest(),
     iv
   );
   let encrypted = cipher.update(jsonString, 'utf8', 'base64');
@@ -104,8 +104,13 @@ function encryptObject(obj, key) {
 
   return encryptedData;
 }
+
 // Function to decrypt an object
 function decryptObject(encryptedData, key) {
+  console.log('encryptedData', encryptedData);
+  if (!encryptedData || typeof encryptedData !== 'string') {
+    throw new Error('Invalid encrypted data');
+  }
   const [ivBase64, encryptedContent] = encryptedData.split(':');
 
   if (!ivBase64 || !encryptedContent) {
@@ -115,7 +120,7 @@ function decryptObject(encryptedData, key) {
   const iv = Buffer.from(ivBase64, 'base64');
   const decipher = crypto.createDecipheriv(
     'aes-256-cbc',
-    Buffer.from(key, 'base64'),
+    crypto.createHash('sha256').update(key).digest(),
     iv
   );
 
@@ -130,24 +135,9 @@ const decryptJwtObject = (token, secret) => {
   try {
     const encryptedData = jwt.verify(token, secret);
 
-    const [ivBase64, encryptedContent] =
-      encryptedData?.accessToken.split(':') || [];
+    const decryptedData = decryptObject(encryptedData.accessToken, secret);
 
-    if (!ivBase64 || !encryptedContent) {
-      throw new Error('Invalid encrypted token format');
-    }
-
-    const iv = Buffer.from(ivBase64, 'base64');
-    const decipher = crypto.createDecipheriv(
-      'aes-256-cbc',
-      Buffer.from(secret),
-      iv
-    );
-
-    let decrypted = decipher.update(encryptedContent, 'base64', 'utf8');
-    decrypted += decipher.final('utf8');
-
-    return JSON.parse(decrypted);
+    return decryptedData;
   } catch (error) {
     throw new Error(`Failed to decrypt object: ${error.message}`);
   }
